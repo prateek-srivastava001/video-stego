@@ -1,0 +1,11 @@
+START_FRAME = 10
+STEP = 2
+BLOCK_SIZE = 8
+BLOCK_Y = 16
+BLOCK_X = 16
+VAL_ZERO = 16
+VAL_ONE  = 240
+THRESH   = 128
+
+DEFAULT_INPUT_VIDEO = "videos/doraemon.mp4"
+DEFAULT_OUTPUT_VIDEO = "videos/output.avi"
