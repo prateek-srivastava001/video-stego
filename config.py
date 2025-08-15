@@ -7,5 +7,5 @@ VAL_ZERO = 16
 VAL_ONE  = 240
 THRESH   = 128
 
-DEFAULT_INPUT_VIDEO = "videos/doraemon.mp4"
-DEFAULT_OUTPUT_VIDEO = "videos/output.avi"
+DEFAULT_INPUT_VIDEO = "videos/sample.mp4"
+DEFAULT_OUTPUT_VIDEO = "videos/output.mp4"
