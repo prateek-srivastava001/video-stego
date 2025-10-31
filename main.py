@@ -8,6 +8,7 @@ A command-line interface for embedding and extracting hidden messages in video f
 import argparse
 import sys
 import os
+import getpass
 from pathlib import Path
 from config import DEFAULT_INPUT_VIDEO, DEFAULT_OUTPUT_VIDEO
 from utils.embed import embed_message_simple
@@ -55,10 +56,26 @@ def cmd_embed(args) -> None:
         print("Error: Message cannot be empty.")
         sys.exit(1)
     
+    # Get password if requested
+    password = None
+    if args.password:
+        password = getpass.getpass("Enter password for encryption: ")
+        if not password:
+            print("Error: Password cannot be empty when -p flag is used.")
+            sys.exit(1)
+        # Confirm password
+        password_confirm = getpass.getpass("Confirm password: ")
+        if password != password_confirm:
+            print("Error: Passwords do not match.")
+            sys.exit(1)
+    
     try:
         print(f"Embedding message into '{input_video}' -> '{output_video}'...")
-        embed_message_simple(input_video, output_video, message)
-        print(f"✓ Successfully embedded message into '{output_video}'")
+        embed_message_simple(input_video, output_video, message, password)
+        if password:
+            print(f"Successfully embedded encrypted message into '{output_video}'")
+        else:
+            print(f"Successfully embedded message into '{output_video}'")
     except Exception as e:
         print(f"Error during embedding: {e}")
         sys.exit(1)
@@ -72,10 +89,17 @@ def cmd_recover(args) -> None:
     
     validate_file_exists(stego_video, "Stego video")
     
+    password = None
+    if args.password:
+        password = getpass.getpass("Enter password for decryption: ")
+        if not password:
+            print("Error: Password cannot be empty when -p flag is used.")
+            sys.exit(1)
+    
     try:
         print(f"Extracting message from '{stego_video}'...")
-        recovered_message = extract_message_simple(stego_video)
-        print("✓ Successfully extracted message:")
+        recovered_message = extract_message_simple(stego_video, password)
+        print("Successfully extracted message:")
         print(f"Message: {repr(recovered_message)}")
     except Exception as e:
         print(f"Error during extraction: {e}")
@@ -87,12 +111,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Video Steganography CLI Tool - Hide and extract messages in video files",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
+        epilog="""\
 Examples:
   %(prog)s embed                          # Interactive embed with prompts
-  %(prog)s embed -y -m "secret message"   # Embed with defaults and specified message
+  %(prog)s -y -m "secret message" embed   # Embed with defaults and specified message
+  %(prog)s -p -m "secret message" embed   # Embed with password protection
   %(prog)s recover                        # Interactive recovery with prompts
-  %(prog)s recover -y                     # Recover with default paths
+  %(prog)s -y recover                     # Recover with default paths
+  %(prog)s -p recover                     # Recover with password decryption
   
 Default paths:
   Input video:  {input}
@@ -105,6 +131,8 @@ Default paths:
                        help='Use default paths without prompting')
     parser.add_argument('-m', '--message', type=str,
                        help='Message to embed (only for embed command)')
+    parser.add_argument('-p', '--password', action='store_true',
+                       help='Enable password protection (encrypt/decrypt message)')
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     

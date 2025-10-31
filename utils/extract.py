@@ -1,8 +1,9 @@
 import cv2
 from config import START_FRAME, STEP, BLOCK_SIZE, BLOCK_Y, BLOCK_X, THRESH
 from utils.utils import bits_to_text, bits_to_int32, get_frame_indices
+from utils.crypto import decrypt_message
 
-def extract_message_simple(stego_path: str) -> str:
+def extract_message_simple(stego_path: str, password: str = None) -> str:
     cap = cv2.VideoCapture(stego_path)
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open stego video: {stego_path}")
@@ -69,4 +70,13 @@ def extract_message_simple(stego_path: str) -> str:
     if len(msg_bits) < msg_bits_len:
         raise RuntimeError(f"Could not read complete message: got {len(msg_bits)} bits, expected {msg_bits_len}")
     
-    return bits_to_text(msg_bits)
+    message = bits_to_text(msg_bits)
+    
+    if password:
+        print("Decrypting message with password...")
+        try:
+            message = decrypt_message(message, password)
+        except ValueError as e:
+            raise RuntimeError(f"Failed to decrypt message: {e}") from e
+    
+    return message

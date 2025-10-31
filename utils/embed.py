@@ -1,11 +1,17 @@
 import cv2
 import os
+import json
 import tempfile
 import subprocess
 from config import START_FRAME, STEP, BLOCK_SIZE, BLOCK_Y, BLOCK_X, VAL_ZERO, VAL_ONE
 from utils.utils import text_to_bits, int_to_32bits, get_frame_indices
+from utils.crypto import encrypt_message
 
-def embed_message_simple(in_path: str, out_path: str, message: str):
+def embed_message_simple(in_path: str, out_path: str, message: str, password: str = None):
+    if password:
+        print("Encrypting message with password...")
+        message = encrypt_message(message, password)
+    
     msg_bits = text_to_bits(message)
     header_bits = int_to_32bits(len(msg_bits))
     payload_bits = header_bits + msg_bits
@@ -82,7 +88,6 @@ def embed_message_simple(in_path: str, out_path: str, message: str):
                 'ffprobe', '-v', 'quiet', '-print_format', 'json', 
                 '-show_format', in_path
             ], capture_output=True, text=True, check=True)
-            import json
             probe_data = json.loads(result.stdout)
             original_bitrate = int(probe_data['format'].get('bit_rate', '2500000'))
         except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError):
